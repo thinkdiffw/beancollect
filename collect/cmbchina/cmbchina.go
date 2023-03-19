@@ -115,7 +115,7 @@ func formatTransaction(r *record, c *types.Config) types.Transaction {
 	}
 	t.Flag = "*"
 	t.Accounts = append(t.Accounts, c.Account[r.CardNumber])
-	t.Payee = r.Description
+	t.Payee = strings.TrimSpace(r.Description)
 	t.Amount = r.RMBAmount
 	t.Currency = "CNY"
 

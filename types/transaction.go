@@ -1,6 +1,11 @@
 package types
 
-import "time"
+import (
+	log "github.com/sirupsen/logrus"
+	"regexp"
+	"strings"
+	"time"
+)
 
 // Transaction means a real transaction in beancount.
 type Transaction struct {
@@ -16,14 +21,26 @@ type Transaction struct {
 	// Metadata map[string]string
 }
 
+var regexCache = make(map[string]*regexp.Regexp, 1)
+
 // IsMatch will check whether this transaction match condition.
-// TODO: support regex
 func (t Transaction) IsMatch(cond map[string]string) bool {
 	// Currently, we only support payee.
-	if cond["payee"] == t.Payee {
-		return true
+	return strings.Contains(t.Payee, cond["payee"]) || regexMatch(t.Payee, cond["payee"])
+}
+
+func regexMatch(str, pattern string) bool {
+	x, ok := regexCache[pattern]
+	if ok {
+		return x.MatchString(str)
 	}
-	return false
+	regex, err := regexp.Compile(pattern)
+	if err != nil {
+		log.Errorf("regex parse failed for %s", err)
+		return false
+	}
+	regexCache[pattern] = regex
+	return regex.MatchString(str)
 }
 
 // Transactions is the array for transactions
