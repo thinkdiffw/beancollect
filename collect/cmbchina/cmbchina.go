@@ -67,7 +67,7 @@ func (cmb *CMBChina) Parse(c *types.Config, r io.Reader) (t types.Transactions, 
 			case 2:
 				tr.Description = value
 			case 3:
-				value = strings.TrimPrefix(value, "￥")
+				value = strings.TrimPrefix(value, "¥")
 				value = strings.TrimSpace(value)
 				// CMBChina will insert "," in amount
 				value = strings.ReplaceAll(value, ",", "")
@@ -105,14 +105,15 @@ func (cmb *CMBChina) Parse(c *types.Config, r io.Reader) (t types.Transactions, 
 func formatTransaction(r *record, c *types.Config) types.Transaction {
 	t := types.Transaction{}
 
-	var err error
 	if len(r.PostDate) != 0 {
-		t.Time, err = time.Parse("0102", r.PostDate)
+		tm, err := time.Parse("0102", r.PostDate)
 		if err != nil {
 			log.Errorf("parse time failed for %s", err)
+		} else {
+			t.Time = time.Date(time.Now().Year(), tm.Month(), tm.Day(), 0, 0, 0, 0, tm.Location())
 		}
 	}
-	t.Flag = "!"
+	t.Flag = "*"
 	t.Accounts = append(t.Accounts, c.Account[r.CardNumber])
 	t.Payee = r.Description
 	t.Amount = r.RMBAmount
